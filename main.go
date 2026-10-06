@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -16,8 +17,14 @@ func main() {
 		return
 	}
 
-	fmt.Println("URL: ", os.Args[1])
+	URL := os.Args[1]
 
-	//URL:= os.Args[1]
+	if strings.HasPrefix(URL, "https://") {
+		fmt.Println("URL: ", URL)
+	} else {
+		URL := "https://" + URL
+		fmt.Println("URL: ", URL)
+	}
+	// fmt.Println("URL: ", os.Args[1])
 
 }
