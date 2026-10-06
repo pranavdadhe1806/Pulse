@@ -1,4 +1,4 @@
-﻿# Pulse
+# Pulse
 
 > A production-grade uptime monitor built from scratch in Go — my 12-week journey from zero to deployed.
 
@@ -223,12 +223,6 @@ An uptime monitor is an ideal learning project because:
 | Database indexing | [Use The Index, Luke](https://use-the-index-luke.com/) |
 | Security | [OWASP Cheat Sheets](https://cheatsheetseries.owasp.org/) |
 | Go mistakes | [100 Go Mistakes](https://100go.co/) |
-
----
-
-## Progress Tracker
-
-The interactive progress tracker lives in [`docs/Pulse · Pranav's Go plan.html`](docs/Pulse%20%C2%B7%20Pranav%27s%20Go%20plan.html) — open it in a browser to track sprints, log study sessions, and generate weekly reviews.
 
 ---
 
