@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulse · Pranav's Go plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F7F8; --panel:#FFFFFF; --ink:#13232B; --soft:#56666E; --line:#DCE4E7;
+  --go:#00ADD8; --go-deep:#007D9C; --up:#22A06B; --up-bg:#E3F5EC; --warm:#D99A00; --warm-bg:#FFF4D6;
+  --idle:#CBD6DA; --code-bg:#EEF3F5; --code-ink:#9C2D5A; --focus:#00ADD8;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1A20; --panel:#15242C; --ink:#E6EEF1; --soft:#93A6AE; --line:#253841;
+    --go:#2CC3EA; --go-deep:#6FD6F0; --up:#3CC487; --up-bg:#163A2B; --warm:#F0B429; --warm-bg:#3A2F12;
+    --idle:#2D434D; --code-bg:#1C2F38; --code-ink:#F08DB4;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1A20; --panel:#15242C; --ink:#E6EEF1; --soft:#93A6AE; --line:#253841;
+  --go:#2CC3EA; --go-deep:#6FD6F0; --up:#3CC487; --up-bg:#163A2B; --warm:#F0B429; --warm-bg:#3A2F12;
+  --idle:#2D434D; --code-bg:#1C2F38; --code-ink:#F08DB4;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 70px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+a{color:var(--go-deep);text-underline-offset:2px}
+code{font-family:var(--mono);font-size:.86em;background:var(--code-bg);color:var(--code-ink);padding:.08em .35em;border-radius:4px;overflow-wrap:anywhere}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* Top bar */
+.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:16px;height:60px}
+.brand{font-family:var(--display);font-weight:800;font-size:1.35rem;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.beat{width:28px;height:18px}
+.beat path{stroke:var(--go);stroke-width:2.4;fill:none;stroke-linecap:round;stroke-linejoin:round}
+nav{display:flex;gap:4px;margin-left:auto}
+nav button{background:none;border:0;padding:8px 14px;border-radius:999px;cursor:pointer;color:var(--soft);font-weight:700}
+nav button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.theme{background:none;border:1px solid var(--line);border-radius:999px;width:38px;height:38px;cursor:pointer}
+
+/* Hero: uptime strip */
+.hero{padding:36px 0 24px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,5vw,3.3rem);line-height:1.02;letter-spacing:-.035em;margin:0 0 6px}
+.hero p.lede{color:var(--soft);margin:0 0 26px;max-width:60ch}
+.status-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 28px;margin-bottom:14px}
+.big{font-family:var(--display);font-weight:800;font-size:2.4rem;letter-spacing:-.03em;line-height:1}
+.big small{font-size:1rem;color:var(--soft);font-weight:500;letter-spacing:0;margin-left:6px}
+.pill{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:.92rem;padding:5px 12px;border-radius:999px}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.pill.ok{background:var(--up-bg);color:var(--up)} .pill.warn{background:var(--warm-bg);color:var(--warm)} .pill.idle{background:var(--code-bg);color:var(--soft)}
+.strip{display:grid;grid-template-columns:repeat(32,1fr);gap:4px;height:58px;margin-top:6px}
+.strip button{border:0;border-radius:3px;background:var(--idle);cursor:pointer;padding:0;transition:transform .12s}
+.strip button:hover{transform:scaleY(1.08)}
+.strip button.done{background:var(--up)} .strip button.doing{background:var(--warm)}
+.strip button.current{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.strip-legend{display:flex;justify-content:space-between;color:var(--soft);font-size:.82rem;margin-top:8px;gap:12px}
+.phase-ticks{display:grid;grid-template-columns:repeat(32,1fr);gap:4px;margin-top:6px;font-size:.75rem;color:var(--soft)}
+.phase-ticks span{border-left:2px solid var(--line);padding-left:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.strip{gap:2px;height:44px}.phase-ticks{gap:2px}.phase-ticks span{font-size:0;border-left-width:2px;height:8px}}
+
+/* Layout */
+.view{display:none;padding-bottom:60px} .view.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.panel h2{font-family:var(--display);font-size:1.35rem;letter-spacing:-.02em;margin:0 0 4px;line-height:1.2}
+.panel h3{font-family:var(--display);font-size:1.02rem;margin:20px 0 6px}
+.meta{color:var(--soft);font-size:.9rem}
+.next-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.sprint-no{font-family:var(--display);font-weight:800;color:var(--go-deep);font-size:.95rem}
+.goal{font-size:1.04rem;margin:10px 0 0}
+ul.plain{list-style:none;padding:0;margin:0}
+ul.plain li{padding:5px 0}
+ul.dots{margin:0;padding-left:20px} ul.dots li{padding:3px 0}
+label.check{display:flex;gap:10px;align-items:flex-start;cursor:pointer;padding:6px 8px;margin:0 -8px;border-radius:8px}
+label.check:hover{background:var(--code-bg)}
+label.check input{appearance:none;flex:none;width:20px;height:20px;margin-top:2px;border:2px solid var(--idle);border-radius:5px;display:grid;place-content:center;cursor:pointer;background:var(--panel)}
+label.check input:checked{background:var(--up);border-color:var(--up)}
+label.check input:checked::after{content:"";width:10px;height:6px;border:solid #fff;border-width:0 0 2.5px 2.5px;transform:rotate(-45deg) translate(1px,-1px)}
+label.check input:checked + span{color:var(--soft);text-decoration:line-through;text-decoration-color:var(--idle)}
+label.check.res input:checked + span{text-decoration:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.btn{border:1px solid var(--line);background:var(--panel);padding:9px 15px;border-radius:9px;cursor:pointer;font-weight:700}
+.btn:hover{border-color:var(--soft)}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.small{padding:5px 10px;font-size:.88rem}
+textarea,input[type=number],input[type=date],input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 11px}
+textarea{min-height:90px;resize:vertical}
+.loop{counter-reset:s;list-style:none;padding:0;margin:8px 0 0}
+.loop li{counter-increment:s;display:flex;gap:10px;padding:6px 0;color:var(--soft)}
+.loop li::before{content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-content:center;font-weight:700;font-size:.8rem;background:var(--code-bg);color:var(--ink)}
+.loop li.on{color:var(--ink)} .loop li.on::before{background:var(--go);color:#fff}
+.loop li.past::before{background:var(--up);color:#fff}
+.stack>*+*{margin-top:22px}
+.hours{display:flex;align-items:baseline;gap:8px}
+.bar{height:8px;background:var(--code-bg);border-radius:99px;overflow:hidden;margin:10px 0 4px}
+.bar i{display:block;height:100%;background:var(--go)}
+.log{max-height:240px;overflow:auto;margin-top:12px;border-top:1px solid var(--line)}
+.log li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.log li span:last-child{color:var(--soft);text-align:right}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;font-weight:700;transition:transform .25s;z-index:20}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.empty{color:var(--soft);font-style:italic}
+
+/* Plan view */
+.phase{margin-top:26px}
+.phase-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.phase-head h2{font-family:var(--display);font-size:1.6rem;letter-spacing:-.025em;margin:0}
+.phase-head .meta{flex:1}
+.mini{display:flex;gap:3px}
+.mini i{width:14px;height:22px;border-radius:2px;background:var(--idle)} .mini i.done{background:var(--up)} .mini i.doing{background:var(--warm)}
+.outcome{border-left:4px solid var(--go);background:var(--panel);padding:12px 16px;border-radius:0 10px 10px 0;margin-bottom:12px}
+details.sprint{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-top:8px}
+details.sprint summary{list-style:none;cursor:pointer;padding:14px 18px;display:flex;align-items:center;gap:14px}
+details.sprint summary::-webkit-details-marker{display:none}
+details.sprint summary .dot{flex:none;width:12px;height:12px;border-radius:50%;background:var(--idle)}
+details.sprint.done summary .dot{background:var(--up)} details.sprint.doing summary .dot{background:var(--warm)}
+details.sprint summary .t{flex:1;font-weight:700}
+details.sprint summary .t small{display:block;font-weight:400;color:var(--soft);font-size:.86rem}
+details.sprint summary .cnt{color:var(--soft);font-size:.86rem;white-space:nowrap}
+details.sprint .body{padding:0 18px 18px;border-top:1px solid var(--line)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:720px){.cols{grid-template-columns:1fr}}
+.wrapup{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px}
+@media (max-width:720px){.wrapup{grid-template-columns:1fr}}
+.wrapup .panel{padding:16px}
+.wrapup h3{margin-top:0}
+.concepts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px;padding:0;list-style:none}
+.concepts li{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:.88rem}
+
+/* Review view */
+.qs label{display:block;font-weight:700;margin:14px 0 6px}
+.weeks{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.weeks button{border:1px solid var(--line);background:var(--panel);border-radius:8px;width:42px;height:38px;cursor:pointer;font-weight:700}
+.weeks button.has{border-color:var(--up);color:var(--up)}
+.weeks button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sync{font-size:.82rem;color:var(--soft)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="beat" viewBox="0 0 28 18" aria-hidden="true"><path d="M1 10h6l3-7 4 13 3-9 2 3h8"/></svg>
+      Pulse
+    </div>
+    <nav role="tablist" aria-label="Sections">
+      <button role="tab" data-view="today" aria-selected="true">Today</button>
+      <button role="tab" data-view="plan" aria-selected="false">Plan</button>
+      <button role="tab" data-view="review" aria-selected="false">Reviews</button>
+    </nav>
+    <button class="theme" id="theme" aria-label="Switch light or dark theme">◐</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 id="greet">Pranav's Go journey</h1>
+    <p class="lede">12 weeks, 32 sprints, one uptime monitor written by hand. Each bar below is a sprint: green is done, amber is in progress.</p>
+    <div class="status-line">
+      <div class="big" id="pct">0%<small>complete</small></div>
+      <div class="big" id="cnt">0<small>of 32 sprints</small></div>
+      <span class="pill idle" id="pace">Set your start date</span>
+    </div>
+    <div class="strip" id="strip" aria-label="Sprint progress"></div>
+    <div class="phase-ticks" id="ticks" aria-hidden="true"></div>
+  </section>
+
+  <!-- TODAY -->
+  <section class="view on" id="view-today">
+    <div class="grid">
+      <div class="panel" id="next"></div>
+      <div class="stack">
+        <div class="panel">
+          <h2>Study time</h2>
+          <div class="hours"><span class="big" id="hrs">0</span><span class="meta" id="hrs-of">of ~144 planned hours</span></div>
+          <div class="bar"><i id="hrs-bar" style="width:0"></i></div>
+          <p class="meta" id="streak"></p>
+          <h3>Log a session</h3>
+          <div class="row">
+            <input type="date" id="s-date" aria-label="Session date">
+            <input type="number" id="s-mins" min="5" step="5" value="120" aria-label="Minutes studied">
+          </div>
+          <input type="text" id="s-note" placeholder="What did you work on? (optional)" style="margin-top:8px" aria-label="Session note">
+          <div class="btns"><button class="btn primary" id="s-add">Log session</button></div>
+          <ul class="plain log" id="log"></ul>
+        </div>
+        <div class="panel">
+          <h2>Plan settings</h2>
+          <p class="meta">Your start date lets the dashboard tell you whether you're on pace.</p>
+          <label for="start" style="font-weight:700;display:block;margin:10px 0 6px">Start date</label>
+          <input type="date" id="start">
+          <div class="btns">
+            <button class="btn small" id="export">Copy progress backup</button>
+            <button class="btn small" id="import">Restore from backup</button>
+            <button class="btn small" id="reset">Reset all progress</button>
+          </div>
+          <p class="sync" id="sync">Saving in this browser.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section class="view" id="view-plan"></section>
+
+  <!-- REVIEW -->
+  <section class="view" id="view-review">
+    <div class="panel">
+      <h2>Weekly review</h2>
+      <p class="meta">Fill this in on day 7 of each week, then send it to Claude with a link to your latest commit.</p>
+      <div class="weeks" id="weeks"></div>
+      <div class="qs" id="qs"></div>
+      <div class="btns">
+        <button class="btn primary" id="r-copy">Copy review for Claude</button>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const PHASES = [{"id":"0","title":"Foundations","weeks":"Week 1","days":"6 days + review","outcome":"`go run . https://google.com` prints `UP  200  142ms`, and an unreachable URL prints `DOWN` with a clear reason instead of crashing. Everything lives in a single `main.go`.","why":"Before concurrency or servers, you need to be comfortable reading and writing basic Go: how a program is structured, how types work, and how Go handles errors. Doing it through a real HTTP request means even your first week produces something useful.","concepts":["Go toolchain: `go run`, `go build`, `go mod init`, `go fmt`","Packages, imports, the `main` function","Variables, constants, basic types, `:=` short declarations","Functions with multiple return values","`if`, `for` (Go's only loop), `switch`, `defer`","Errors as values, `if err != nil`","Structs and methods","The `net/http` client, `time` package, `flag` package"],"sprints":[{"n":"0.1","title":"Setup and your first Go program","days":"Days 1-2","hours":"~4 hrs","goal":"Get Go installed, create the repo, and write a program that reads input from the command line.","learn":["[Download and install Go](https://go.dev/doc/install)","[Tutorial: Get started with Go](https://go.dev/doc/tutorial/getting-started) (modules, `go run`, `go mod init`)","[A Tour of Go](https://go.dev/tour/): Basics section only (packages, variables, functions, `for`, `if`, `switch`, `defer`)"],"build":["Create a GitHub repo named `pulse` and run `go mod init github.com/<you>/pulse`.","Write `main.go` that reads a URL from `os.Args` and prints it.","If no argument is given, print a usage message and exit with code 1 using `os.Exit(1)`.","Set up your editor: VS Code with the official Go extension (gives you formatting, autocomplete and inline errors)."],"done":["`go run . https://example.com` prints the URL","Running with no argument prints usage and exits with code 1","First commit pushed with a one-line README"]},{"n":"0.2","title":"Making HTTP requests and handling errors","days":"Days 3-4","hours":"~4 hrs","goal":"Make a real network request, time it, and handle every way it can fail.","learn":["[Go by Example](https://gobyexample.com/): HTTP Client, Errors, Time, Time Formatting","[Error handling and Go](https://go.dev/blog/error-handling-and-go) (Go blog)","[net/http package docs](https://pkg.go.dev/net/http): skim `Client`, `Get`, `Response`"],"build":["Make a GET request with an `http.Client` that has a 5-second `Timeout`. Never use the default client in production code; it has no timeout.","Measure latency with `time.Now()` and `time.Since()`.","Always close the response body with `defer resp.Body.Close()`.","Treat 2xx and 3xx as UP, everything else as DOWN."],"done":["A working site prints UP, status code and latency","`https://does-not-exist.invalid` prints DOWN with the error, no panic","You can explain why Go returns errors instead of throwing exceptions"]},{"n":"0.3","title":"Structs, methods and flags","days":"Days 5-6","hours":"~4 hrs","goal":"Give your code structure: data in structs, logic in functions, configuration in flags.","learn":["[A Tour of Go](https://go.dev/tour/): More types (pointers, structs, slices, maps) and the first half of Methods","[Go by Example](https://gobyexample.com/): Structs, Methods, Command-Line Flags"],"build":["Create a `CheckResult` struct with fields URL, StatusCode, Latency, Up and Err.","Move the logic into `func check(client *http.Client, url string) CheckResult`.","Add a `String()` method on `CheckResult` for pretty printing.","Add a `-timeout` flag using the `flag` package."],"done":["`main()` is under 20 lines and only wires things together","`-timeout 100ms` makes a slow site report DOWN with a timeout error","README notes what Phase 0 taught you"]}],"pitfalls":["Forgetting to close `resp.Body`, which leaks connections.","Using `http.Get` (the default client) which waits forever on a hung server.","Ignoring errors with `_`. In this project, every error gets handled or printed."],"interview":["Why does Go use error values instead of exceptions?","What does `defer` do and when does it run?","What is the difference between a value receiver and a pointer receiver?"]},{"id":"1","title":"Concurrent CLI","weeks":"Weeks 2-3","days":"12 days + reviews","outcome":"`pulse -config sites.json -interval 30s` checks every site at the same time, repeats forever, shuts down cleanly on Ctrl+C, and has passing tests.","why":"This is the most important phase. Concurrency is the main reason companies choose Go for backends, and an uptime monitor needs it naturally: checking 100 sites one by one is too slow. Everything you learn here returns in every later phase.","concepts":["Slices, maps and `range`","JSON decoding with struct tags","Goroutines and `sync.WaitGroup`","Data races, the race detector, `sync.Mutex`","Channels (buffered and unbuffered), `select`, closing channels","`time.Ticker` for repeating work","`context.Context` for cancellation and timeouts","Worker pools and bounded concurrency","OS signals and graceful shutdown","Multi-package project layout, `internal/`","Unit tests, table-driven tests, `httptest`"],"sprints":[{"n":"1.1","title":"Slices, maps and a JSON config","days":"Days 1-2","hours":"~4 hrs","goal":"Read a list of sites from a file instead of a single command-line argument.","learn":["[Go by Example](https://gobyexample.com/): Slices, Maps, Range, JSON, Reading Files","[encoding/json docs](https://pkg.go.dev/encoding/json): struct tags and `Unmarshal`"],"build":["Create `sites.json` with 10 sites, each with `name`, `url` and `expected_status`.","Load it into a `[]Site` and check each one in a plain loop, one after another.","Print a summary line at the end: total sites, how many UP, total time taken."],"done":["All 10 sites are checked and printed","A broken config file gives a readable error, not a panic","You've written down the total run time (you'll beat it next sprint)"]},{"n":"1.2","title":"Goroutines and WaitGroups","days":"Days 3-4","hours":"~4 hrs","goal":"Check all sites at the same time and learn what goes wrong when goroutines share memory.","learn":["[A Tour of Go](https://go.dev/tour/): Concurrency section, Goroutines through Buffered Channels","[Go by Example](https://gobyexample.com/): Goroutines, WaitGroups, Mutexes","[Concurrency is not Parallelism](https://www.youtube.com/watch?v=oV9rvDllKEg) (Rob Pike talk, ~30 min)","[Data Race Detector](https://go.dev/doc/articles/race_detector)"],"build":["Check every site in its own goroutine, waiting with a `sync.WaitGroup`.","First collect results into a shared slice the wrong way, run with `go run -race .`, and see the race report.","Fix it with a `sync.Mutex`."],"done":["Total time is roughly the time of the slowest site, not the sum","`-race` reports no races","You can explain a data race in your own words"]},{"n":"1.3","title":"Channels, select and tickers","days":"Days 5-7","hours":"~6 hrs","goal":"Replace shared memory with communication, and make Pulse run continuously.","learn":["[Go by Example](https://gobyexample.com/): Channels, Channel Directions, Select, Timeouts, Closing Channels, Range over Channels, Tickers","[Go Concurrency Patterns](https://www.youtube.com/watch?v=f6kdp27TYZs) (Rob Pike talk)"],"build":["Remove the mutex: goroutines send `CheckResult` values on a channel and `main` is the only goroutine that prints.","Use `time.Ticker` to repeat the full round every `-interval`.","Add a round header like `--- Round 3 (10:42:00) ---` so the output stays readable."],"done":["Results print as each site finishes, not all at the end","The program runs rounds forever on the interval","You can say when to use a channel and when to use a mutex"]},{"n":"1.4","title":"Context, worker pools and graceful shutdown","days":"Days 8-10","hours":"~6 hrs","goal":"Control how many checks run at once and stop everything cleanly.","learn":["[Go Concurrency Patterns: Context](https://go.dev/blog/context) (Go blog)","[Go by Example](https://gobyexample.com/): Context, Worker Pools, Signals","[Go Concurrency Patterns: Pipelines and cancellation](https://go.dev/blog/pipelines) (Go blog)"],"build":["Use `signal.NotifyContext` so Ctrl+C cancels a root `context.Context`.","Build requests with `http.NewRequestWithContext` so in-flight checks stop on shutdown.","Replace one-goroutine-per-site with a pool of N workers (`-workers` flag) reading jobs from a channel."],"done":["Ctrl+C prints \"shutting down\", waits for workers, and exits cleanly","100 sites with 5 workers never run more than 5 checks at once","You can explain why unlimited goroutines is a problem at 10,000 sites"]},{"n":"1.5","title":"Packages and your first tests","days":"Days 11-12","hours":"~4 hrs","goal":"Turn one big file into a proper multi-package project with tests.","learn":["[Tutorial: Create a Go module](https://go.dev/doc/tutorial/create-module) and [Organizing a Go module](https://go.dev/doc/modules/layout)","[Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests): Hello, World and Structs, methods & interfaces chapters","[net/http/httptest docs](https://pkg.go.dev/net/http/httptest): `NewServer`"],"build":["Split into `cmd/pulse/main.go`, `internal/checker` and `internal/config`.","Write table-driven tests for `check()` using `httptest.NewServer` to fake UP, DOWN, slow and 500 responses."],"done":["`go test ./... -race` passes","Tests never hit the real internet","README has a usage section and sample output"]}],"pitfalls":["Starting goroutines in a loop and capturing the wrong variable (less likely since Go 1.22, but know why).","Sending on a channel nobody reads, causing a deadlock.","Forgetting to call `wg.Done()`, so `wg.Wait()` hangs forever.","Closing a channel from the receiver side."],"interview":["What is the difference between concurrency and parallelism?","How would you limit the number of concurrent HTTP requests?","What happens if you send on a closed channel?","How does `context` cancellation propagate?"]},{"id":"2","title":"HTTP API","weeks":"Weeks 4-5","days":"12 days + reviews","outcome":"Pulse is a server. You add and remove monitors through a REST API, a background scheduler checks them, and recent results are queryable. Data lives in memory behind an interface that gets swapped for Postgres in Phase 3.","why":"Every backend job is about building APIs. Since Go 1.22, the standard library router supports methods and path parameters, so you'll build this without a framework and understand what frameworks actually do.","concepts":["`http.Server`, `ServeMux`, handlers, `HandlerFunc`","Go 1.22 routing patterns (`GET /monitors/{id}`)","Encoding and decoding JSON request and response bodies","REST design and HTTP status codes","Input validation and consistent error responses","Interfaces and dependency injection","`sync.RWMutex` for shared state","Running a server and background workers together","`http.Server.Shutdown` and `errgroup`","Middleware: logging, recovery, request IDs","Configuration from environment variables","Handler tests with `httptest.NewRecorder`"],"sprints":[{"n":"2.1","title":"Your first HTTP server","days":"Days 1-2","hours":"~4 hrs","goal":"Understand how Go serves HTTP requests at the lowest level.","learn":["[Go by Example](https://gobyexample.com/): HTTP Server","[Routing Enhancements for Go 1.22](https://go.dev/blog/routing-enhancements) (Go blog)","[net/http docs](https://pkg.go.dev/net/http): `ServeMux`, `Handler`, `HandlerFunc`, `ResponseWriter`"],"build":["Add `cmd/pulse-server/main.go` with a `GET /health` endpoint returning `{\"status\":\"ok\"}`."],"done":["`curl localhost:8080/health` returns JSON with the right `Content-Type`","`POST /health` returns 405, and you understand why"]},{"n":"2.2","title":"JSON CRUD for monitors","days":"Days 3-5","hours":"~6 hrs","goal":"Build a complete, well-behaved REST resource.","learn":["[How I write HTTP services in Go after 13 years](https://grafana.com/blog/2024/02/09/how-i-write-http-services-in-go-after-13-years/) (Mat Ryer)","[encoding/json docs](https://pkg.go.dev/encoding/json): `NewDecoder`, `NewEncoder`, `DisallowUnknownFields`","[HTTP response status codes](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) (MDN, reference)"],"build":["A `Monitor` struct with ID, Name, URL, IntervalSeconds, ExpectedStatus and CreatedAt.","Endpoints: `POST /monitors`, `GET /monitors`, `GET /monitors/{id}`, `DELETE /monitors/{id}`.","Validate input (valid URL, interval at least 10 seconds).","Return consistent JSON errors through `writeJSON` and `writeError` helpers."],"done":["Full create, list, get and delete flow works with curl or Postman","Bad input returns 400 with a useful message; unknown ID returns 404"]},{"n":"2.3","title":"Interfaces and safe shared state","days":"Days 6-7","hours":"~4 hrs","goal":"Decouple your handlers from storage so the database can be swapped later.","learn":["[A Tour of Go](https://go.dev/tour/): rest of Methods and interfaces","[Go by Example](https://gobyexample.com/): Interfaces, Mutexes","[Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests): Dependency Injection and Mocking chapters"],"build":["Define a `Store` interface: `CreateMonitor`, `ListMonitors`, `GetMonitor`, `DeleteMonitor`, `SaveResult`, `RecentResults`.","Implement `MemoryStore` guarded by `sync.RWMutex`. Handlers receive the interface, never the concrete type.","Add `GET /monitors/{id}/checks` returning the last 50 results."],"done":["No handler mentions `MemoryStore` directly","Hammering the API with concurrent requests passes under `-race`"]},{"n":"2.4","title":"Background scheduler and graceful shutdown","days":"Days 8-10","hours":"~6 hrs","goal":"Connect your Phase 1 worker pool to the API so monitors are checked automatically.","learn":["[net/http docs](https://pkg.go.dev/net/http#Server.Shutdown): `Server.Shutdown`","[errgroup package](https://pkg.go.dev/golang.org/x/sync/errgroup)","Re-read your own Phase 1 worker pool code. You're reusing it."],"build":["A `scheduler` package that runs each monitor on its own interval, feeding the worker pool and saving results to the `Store`.","Creating a monitor via the API starts its checks; deleting it stops them.","One root context: Ctrl+C stops the HTTP server and the scheduler together."],"done":["A monitor added with curl shows new results within its interval","Deleting a monitor stops its checks (visible in logs)","Shutdown finishes in-flight requests and checks, then exits"]},{"n":"2.5","title":"Middleware, config and handler tests","days":"Days 11-12","hours":"~4 hrs","goal":"Add the cross-cutting pieces every production server has.","learn":["[Making and using HTTP middleware](https://www.alexedwards.net/blog/making-and-using-middleware) (Alex Edwards)","[Learn Go with Tests](https://quii.gitbook.io/learn-go-with-tests): HTTP Server chapter"],"build":["Middleware for request logging (method, path, status, duration), panic recovery and request IDs.","Read config (port, worker count) from environment variables with sensible defaults.","Handler tests using `httptest.NewRecorder` and a fake `Store`."],"done":["A panicking handler returns 500 and the server keeps running","`go test ./... -race` covers every endpoint's happy and error path"]}],"pitfalls":["Writing the status code after writing the body (headers are already sent).","Holding a mutex while doing slow work like network calls.","Returning internal error messages to API clients.","Putting business logic inside handlers instead of separate functions."],"interview":["How do you structure a Go HTTP service?","Why depend on interfaces rather than concrete types?","How do you shut down a server without dropping requests?","What is middleware and how is it implemented in Go?"]},{"id":"3","title":"PostgreSQL","weeks":"Weeks 6-7","days":"13 days + reviews","outcome":"Monitors and every check result survive restarts, and the API answers real questions: uptime % over 24 hours and 7 days, average and p95 latency. Swapping `MemoryStore` for `PostgresStore` needs zero handler changes.","why":"Almost every backend talks to a relational database. Here you learn schema design, migrations, connection pooling and query performance with data that actually grows fast: one monitor checked every 30 seconds creates 2,880 rows a day.","concepts":["Docker and Docker Compose basics","Relational schema design, primary and foreign keys","SQL: joins, aggregates, `GROUP BY`, `FILTER`, percentiles","Database migrations (up and down)","`pgx` driver and `pgxpool` connection pooling","Parameterized queries and SQL injection","Indexes and `EXPLAIN ANALYZE`","Data retention jobs","Integration testing with real databases (Testcontainers)"],"sprints":[{"n":"3.1","title":"Docker, Postgres and a SQL refresher","days":"Days 1-3","hours":"~6 hrs","goal":"Run Postgres locally and design the schema before writing any Go.","learn":["[Docker: Get started](https://docs.docker.com/get-started/) (images, containers, volumes, Compose)","[PostgreSQL Tutorial](https://www.postgresqltutorial.com/): SELECT, WHERE, JOIN, GROUP BY, aggregate functions, indexes"],"build":["A `docker-compose.yml` running Postgres 16 with a named volume.","Design the schema on paper first: `monitors` and `checks` (monitor_id, checked_at, status_code, latency_ms, up, error). Send it for review before writing SQL."],"done":["`docker compose up -d` starts Postgres and data survives `down` and `up`","You can connect with `psql` and run queries by hand"]},{"n":"3.2","title":"Migrations","days":"Days 4-5","hours":"~3 hrs","goal":"Make schema changes versioned and repeatable.","learn":["[golang-migrate](https://github.com/golang-migrate/migrate): README and the Postgres tutorial in its docs"],"build":["`migrations/000001_init.up.sql` and `.down.sql` with tables, foreign keys and `ON DELETE CASCADE`.","A `Makefile` with `migrate-up`, `migrate-down` and `db-shell` targets."],"done":["Up, down, then up again works cleanly on an empty database","You can explain why schema changes go in migrations"]},{"n":"3.3","title":"Connecting Go to Postgres with pgx","days":"Days 6-8","hours":"~6 hrs","goal":"Implement the same `Store` interface on top of a real database.","learn":["[Accessing relational databases](https://go.dev/doc/database/) (official Go guide)","[pgx](https://github.com/jackc/pgx): README, `pgxpool`, and its wiki"],"build":["`PostgresStore` implementing your `Store` interface using a `pgxpool.Pool`.","A `STORE=memory|postgres` environment variable chooses the implementation in `main`.","Use parameterized queries (`$1`, `$2`) everywhere, never string formatting."],"done":["Every Phase 2 endpoint works against Postgres with no handler changes","Restarting the server keeps all monitors and history","You can explain SQL injection and why `$1` prevents it"]},{"n":"3.4","title":"Queries that matter","days":"Days 9-11","hours":"~6 hrs","goal":"Turn raw check rows into useful statistics, fast.","learn":["[PostgreSQL docs: Aggregate functions](https://www.postgresql.org/docs/current/functions-aggregate.html) (`percentile_cont`, `FILTER`)","[Use The Index, Luke](https://use-the-index-luke.com/): chapters 1 and 2","[Using EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html)"],"build":["`GET /monitors/{id}/stats?window=24h` returning uptime %, average and p95 latency, and total checks.","An index on `checks (monitor_id, checked_at DESC)`; compare `EXPLAIN ANALYZE` before and after on 100,000 fake rows.","A daily retention job deleting checks older than 30 days.","Optional: try [sqlc](https://sqlc.dev/) to generate type-safe query code."],"done":["Stats endpoint returns correct numbers (verify one by hand in psql)","The index visibly changes the query plan"]},{"n":"3.5","title":"Integration tests","days":"Days 12-13","hours":"~4 hrs","goal":"Prove both store implementations behave identically.","learn":["[Testcontainers for Go](https://golang.testcontainers.org/): quickstart and the Postgres module"],"build":["Tests that start a real Postgres container, run migrations and exercise `PostgresStore`.","Run the same test suite against both `MemoryStore` and `PostgresStore`."],"done":["`go test ./...` starts its own database with no manual setup","Both store implementations pass the identical suite"]}],"pitfalls":["Building SQL with `fmt.Sprintf`, which opens SQL injection.","Forgetting `rows.Close()` or not checking `rows.Err()`.","Opening a new connection per request instead of using a pool.","Storing timestamps without time zones (use `timestamptz`)."],"interview":["What is an index and when does it not help?","How does connection pooling work and why does it matter?","How do you run schema migrations safely in production?","What is SQL injection and how do you prevent it?"]},{"id":"4","title":"Production Features","weeks":"Weeks 8-9","days":"13 days + reviews","outcome":"Pulse is multi-user, sends alerts when a site goes down and recovers, handles 1,000+ monitors with stable resource use, and logs like a real service.","why":"This phase turns a working project into a production backend. Auth, alerting, observability and hardening are what interviewers probe to tell a toy project from real experience.","concepts":["Password hashing with bcrypt","JWTs versus server-side sessions","Auth middleware and passing data through `context`","Authorization: scoping data per user","State machines (UP/DOWN incidents with thresholds)","Webhooks, retries and exponential backoff","Profiling with `pprof`","Rate limiting with `x/time/rate`","Structured logging with `slog`","Server timeouts and request size limits","Linting with `golangci-lint`"],"sprints":[{"n":"4.1","title":"Users and authentication","days":"Days 1-3","hours":"~6 hrs","goal":"Let multiple people use Pulse without seeing each other's data.","learn":["[OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)","[bcrypt package](https://pkg.go.dev/golang.org/x/crypto/bcrypt)","[golang-jwt](https://github.com/golang-jwt/jwt) README and the [Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)"],"build":["A migration adding `users`, and `user_id` on `monitors`.","`POST /auth/signup` and `POST /auth/login` returning a token.","Auth middleware that puts the user into the request `context`.","Every monitor query scoped to the logged-in user."],"done":["User A can never read or delete User B's monitors (with a test proving it)","Passwords are stored only as bcrypt hashes"]},{"n":"4.2","title":"Incidents and alerts","days":"Days 4-6","hours":"~6 hrs","goal":"Notify users when something breaks, without spamming them.","learn":["[Intro to Discord webhooks](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)","[Go by Example](https://gobyexample.com/): Rate Limiting; read about exponential backoff with jitter"],"build":["An `incidents` table: opened when a monitor fails 3 checks in a row, closed on recovery. This avoids alerts on one-off blips.","An `Alerter` interface with a Discord webhook implementation (email optional), retried with backoff.","`GET /monitors/{id}/incidents`."],"done":["A dead URL sends exactly one DOWN alert, and one UP alert when fixed","A failing webhook doesn't block or crash the scheduler"]},{"n":"4.3","title":"Scaling the scheduler","days":"Days 7-8","hours":"~4 hrs","goal":"Measure, then improve, how Pulse behaves under real load.","learn":["[Profiling Go Programs](https://go.dev/blog/pprof) (Go blog) and [net/http/pprof](https://pkg.go.dev/net/http/pprof)","[x/time/rate](https://pkg.go.dev/golang.org/x/time/rate)"],"build":["Seed 1,000 monitors; measure goroutine count, memory and check delay.","Add jitter so checks spread out instead of firing all at once; batch result inserts.","Expose pprof on a separate admin port and find one real bottleneck."],"done":["1,000 monitors at a 30-second interval run with stable memory and goroutines","README has a paragraph on what pprof showed"]},{"n":"4.4","title":"Logging and hardening","days":"Days 9-11","hours":"~6 hrs","goal":"Make Pulse observable and resistant to abuse.","learn":["[Structured Logging with slog](https://go.dev/blog/slog) (Go blog)","[The complete guide to Go net/http timeouts](https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/) (Cloudflare)"],"build":["Replace all `fmt.Println` and `log` calls with `slog` JSON logs carrying request ID and user ID.","Set server `ReadTimeout`, `WriteTimeout` and `IdleTimeout`; limit request body size.","Per-IP rate limiting on auth endpoints."],"done":["Every log line is JSON and traceable to a request","Spamming `/auth/login` returns 429 responses"]},{"n":"4.5","title":"Quality pass","days":"Days 12-13","hours":"~4 hrs","goal":"Clean up before adding a frontend on top.","learn":["[golangci-lint](https://golangci-lint.run/) quickstart","[100 Go Mistakes](https://100go.co/): skim the list and check your code against it"],"build":["Fix every lint warning.","Reach meaningful test coverage on `checker`, `scheduler` and the handlers."],"done":["`golangci-lint run` and `go test ./... -race -cover` are both clean"]}],"pitfalls":["Storing JWT secrets in code instead of environment variables.","Returning different errors for \"user not found\" and \"wrong password\" (leaks which emails exist).","Alerting on every single failed check.","Optimizing before profiling."],"interview":["How do you store passwords securely?","JWT or sessions: what are the trade-offs?","How would you design alerting that avoids false alarms?","How do you find a memory leak in a Go service?"]},{"id":"5","title":"Frontend","weeks":"Weeks 10-11","days":"12 days + reviews","outcome":"A dashboard where users sign in, manage monitors, see uptime charts with live updates, and share a public status page.","why":"A full-stack project is far more convincing than an API alone, and connecting a real frontend exposes backend issues you never notice with curl: CORS, pagination, response shapes, and real-time updates.","concepts":["CORS and browser security","Pagination","React components, state and effects (or HTMX with Go templates)","Calling an authenticated API from the browser","Time-bucketed queries with `date_trunc`","Charts","Server-Sent Events and `http.Flusher`","Fan-out pub/sub with channels","In-memory caching"],"sprints":[{"n":"5.1","title":"Getting the API ready for a browser","days":"Days 1-2","hours":"~4 hrs","goal":"Make the browser and your API talk to each other.","learn":["[CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (MDN)","[React: Quick Start](https://react.dev/learn) and [Vite: Getting Started](https://vite.dev/guide/), or the [htmx docs](https://htmx.org/docs/) if you choose HTMX"],"build":["CORS middleware allowing only your frontend's origin.","Pagination on list endpoints (`?limit=&cursor=`).","Scaffold the frontend in a `web/` folder and call `GET /health` from it."],"done":["The browser app shows the API's health without CORS errors"]},{"n":"5.2","title":"Auth pages and monitor management","days":"Days 3-5","hours":"~6 hrs","goal":"A new user can do everything in the browser that you did with curl.","learn":["[React: Managing State](https://react.dev/learn/managing-state) and [Synchronizing with Effects](https://react.dev/learn/synchronizing-with-effects)","[Using the Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch) (MDN)"],"build":["Signup and login pages; store the token safely and attach it to requests.","A monitor list page with status badges.","Add and delete monitor forms that show the API's validation errors inline."],"done":["A new user can sign up, add 3 monitors and see them UP or DOWN, all in the browser"]},{"n":"5.3","title":"Monitor detail page with charts","days":"Days 6-8","hours":"~6 hrs","goal":"Show history visually, backed by efficient queries.","learn":["[Chart.js docs](https://www.chartjs.org/docs/latest/) (line charts, time axis)","[PostgreSQL date_trunc](https://www.postgresql.org/docs/current/functions-datetime.html#FUNCTIONS-DATETIME-TRUNC)"],"build":["Backend: `GET /monitors/{id}/timeseries?window=24h` returning latency bucketed into 5-minute intervals.","Frontend: response-time line chart, uptime % for 24h, 7d and 30d, and an incident history list."],"done":["The chart matches psql output for the same window","The page loads in under a second with 30 days of data"]},{"n":"5.4","title":"Live updates with Server-Sent Events","days":"Days 9-10","hours":"~4 hrs","goal":"Push new results to the browser as they happen.","learn":["[Using server-sent events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) (MDN)","[http.Flusher](https://pkg.go.dev/net/http#Flusher)"],"build":["`GET /events` streams each new check result for the user's monitors.","Internally, a fan-out hub: the scheduler publishes, each connected client subscribes through its own channel.","The dashboard updates badges and charts without refreshing."],"done":["Two browser tabs both update live; closing a tab frees its goroutine (verify with pprof)"]},{"n":"5.5","title":"Public status page","days":"Days 11-12","hours":"~4 hrs","goal":"Give users something to share with their own customers.","learn":["Nothing new to read. This sprint combines what you already know."],"build":["Users mark monitors public and pick a slug; `GET /status/{slug}` needs no login and shows current status plus 90-day uptime bars.","Cache the response in memory for 30 seconds to protect the database."],"done":["A logged-out browser can view the status page","100 rapid requests hit the database at most once per 30 seconds"]}],"pitfalls":["Setting CORS to allow every origin (`*`) together with credentials.","Fetching all checks to the browser and aggregating there.","Leaking goroutines when SSE clients disconnect."],"interview":["What is CORS and why does the browser enforce it?","Polling, SSE or WebSockets: when would you pick each?","How would you cache a hot public endpoint?"]},{"id":"6","title":"Ship It","weeks":"Week 12","days":"7 days","outcome":"Pulse runs live on the internet over HTTPS, every push is tested automatically, and the README explains the project in 60 seconds. Pulse also monitors itself.","why":"A deployed project with CI is proof you can deliver, not just code. This is also when the project becomes something you can confidently put on your resume and talk about in interviews.","concepts":["Multi-stage Docker builds","Docker Compose for the full stack","CI with GitHub Actions","Deploying with secrets in environment variables","Managed Postgres","Writing a strong README"],"sprints":[{"n":"6.1","title":"Containerize everything","days":"Days 1-2","hours":"~4 hrs","goal":"Anyone can run the whole stack with one command.","learn":["[Docker: Multi-stage builds](https://docs.docker.com/build/building/multi-stage/)","[Docker Compose docs](https://docs.docker.com/compose/)"],"build":["A multi-stage `Dockerfile` for the server: build with the Go image, run from a tiny distroless or Alpine image.","`docker compose up` starts Postgres, runs migrations, then starts the API and the frontend."],"done":["A fresh clone runs end to end with one command","The server image is under 30 MB"]},{"n":"6.2","title":"Continuous integration","days":"Days 3-4","hours":"~3 hrs","goal":"Every change is tested automatically.","learn":["[GitHub Actions docs](https://docs.github.com/en/actions): the Building and testing Go guide"],"build":["A workflow running `go vet`, `golangci-lint`, `go test -race` (with Testcontainers) and the frontend build on every push and pull request."],"done":["A green CI badge in the README; a deliberately broken test turns it red"]},{"n":"6.3","title":"Deploy","days":"Days 5-6","hours":"~4 hrs","goal":"Put Pulse on the internet.","learn":["Pick one host and read its Go guide: [Fly.io](https://fly.io/docs/), [Render](https://render.com/docs), or a small VPS. For the database, a free managed Postgres such as [Neon](https://neon.tech/docs)."],"build":["Deploy the API and frontend with secrets in environment variables, never in the repo.","Run migrations as part of deploy.","Add a Pulse monitor that watches Pulse."],"done":["A friend can sign up at your URL and add a monitor","Restarting the deployment loses no data"]},{"n":"6.4","title":"README and demo","days":"Day 7","hours":"~2 hrs","goal":"Make the project easy to understand for anyone who finds it.","learn":["Look at the READMEs of 3 popular Go projects on GitHub and note what makes them clear."],"build":["README with a one-line pitch, screenshot or GIF, live link, architecture diagram, features, local setup and a \"Design decisions\" section (worker pool, store interface, incident threshold, SSE hub).","A short write-up or LinkedIn post on what you learned."],"done":["Someone who has never seen Pulse understands it from the README alone","Pulse is pinned on your GitHub profile"]}],"pitfalls":["Committing `.env` files or secrets.","Running migrations by hand in production.","A README that explains setup but not why the project exists."],"interview":["Walk me through how Pulse works end to end.","What would you change to support 1 million monitors?","How does your CI pipeline protect the main branch?"]}];
+const STUDY_HOURS = 144;
+const PHASE_START_WEEK = {"0":1,"1":2,"2":4,"3":6,"4":8,"5":10,"6":12};
+const QUESTIONS = [
+  "Which sprints did I finish this week?",
+  "What's one concept I can now explain to someone else?",
+  "What confused me or slowed me down?",
+  "Where did I get stuck, and how long did it take to get unstuck?",
+  "Am I on schedule? If not, what will I trim or move?",
+  "What's my plan for next week?"
+];
+
+// flatten sprints with planned calendar day
+const SPRINTS = [];
+PHASES.forEach(ph => ph.sprints.forEach(s => {
+  const m = s.days.match(/(\d+)(?:-(\d+))?/);
+  const endStudy = +(m[2] || m[1]);
+  const cal = (PHASE_START_WEEK[ph.id]-1)*7 + endStudy + Math.floor((endStudy-1)/6);
+  SPRINTS.push({...s, phase: ph, plannedDay: cal});
+}));
+
+// ---------- state ----------
+const LS_KEY = "pulse-plan-progress-v1";
+const blank = () => ({startDate:"", checks:{}, res:{}, started:{}, finished:{}, notes:{}, sessions:[], reviews:{}, updated:0});
+let state = blank();
+try { const raw = localStorage.getItem(LS_KEY); if (raw) state = Object.assign(blank(), JSON.parse(raw)); } catch(e) {}
+
+let docRef = null, saveTimer = null;
+function save(){
+  state.updated = Date.now();
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    if (!docRef) return;
+    try { await docRef.set({json: JSON.stringify(state), updated: state.updated}); setSync("Saved to your account. Progress follows you across devices."); }
+    catch(e){ setSync("Saved in this browser only. Your account storage isn't reachable right now."); }
+  }, 700);
+}
+function setSync(t){ document.getElementById("sync").textContent = t; }
+
+async function connect(){
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+    if (!db || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    docRef = db.doc("data/users/" + uid + "/progress");
+    const snap = await docRef.get();
+    if (snap.exists) {
+      const d = snap.data();
+      if ((d.updated || 0) > (state.updated || 0)) {
+        state = Object.assign(blank(), JSON.parse(d.json));
+        try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
+        renderAll();
+      } else if ((state.updated||0) > (d.updated||0)) save();
+    } else if (state.updated) save();
+    setSync("Saved to your account. Progress follows you across devices.");
+  } catch(e) { /* stay local */ }
+}
+
+// ---------- helpers ----------
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function md(t){
+  return esc(t)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`)
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+}
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+function doneCount(s){ return s.done.filter((_,i)=>state.checks[s.n+":"+i]).length; }
+function status(s){
+  if (state.finished[s.n]) return "done";
+  if (state.started[s.n] || doneCount(s) > 0 || s.learn.some((_,i)=>state.res[s.n+":"+i])) return "doing";
+  return "todo";
+}
+function nextSprint(){ return SPRINTS.find(s => status(s) !== "done") || null; }
+function toast(t){ const el=document.getElementById("toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove("show"),1800); }
+async function copy(text, msg){
+  try { await navigator.clipboard.writeText(text); toast(msg); }
+  catch(e){ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); try{document.execCommand("copy"); toast(msg);}catch(_){toast("Copy failed. Select the text manually.");} ta.remove(); }
+}
+function setCheck(key, val, s){
+  if (val) state.checks[key] = true; else delete state.checks[key];
+  if (doneCount(s) === s.done.length) { if (!state.finished[s.n]) { state.finished[s.n] = today(); toast(`Sprint ${s.n} complete. Commit and push!`); } }
+  else delete state.finished[s.n];
+  if (!state.started[s.n]) state.started[s.n] = today();
+  save(); renderAll();
+}
+function setRes(key, val, s){
+  if (val) state.res[key] = true; else delete state.res[key];
+  if (!state.started[s.n]) state.started[s.n] = today();
+  save(); renderAll();
+}
+
+// ---------- hero ----------
+function renderHero(){
+  const done = SPRINTS.filter(s=>status(s)==="done").length;
+  document.getElementById("pct").innerHTML = Math.round(done/SPRINTS.length*100) + "%<small>complete</small>";
+  document.getElementById("cnt").innerHTML = done + "<small>of " + SPRINTS.length + " sprints</small>";
+  const pace = document.getElementById("pace");
+  if (!state.startDate) { pace.className="pill idle"; pace.textContent="Set your start date"; }
+  else {
+    const day = Math.floor((new Date(today()) - new Date(state.startDate))/86400000) + 1;
+    if (day < 1) { pace.className="pill idle"; pace.textContent = `Starts in ${1-day} day${1-day===1?"":"s"}`; }
+    else {
+      const expected = SPRINTS.filter(s=>s.plannedDay <= day).length;
+      const week = Math.min(12, Math.ceil(day/7));
+      const diff = done - expected;
+      if (diff >= 0) { pace.className="pill ok"; pace.textContent = `Week ${week} · on track` + (diff>0?` (${diff} ahead)`:""); }
+      else { pace.className="pill warn"; pace.textContent = `Week ${week} · ${-diff} sprint${diff===-1?"":"s"} behind`; }
+    }
+  }
+  const nx = nextSprint();
+  const strip = document.getElementById("strip");
+  strip.innerHTML = SPRINTS.map(s => {
+    const st = status(s);
+    const cls = (st==="done"?"done":st==="doing"?"doing":"") + (nx && nx.n===s.n?" current":"");
+    return `<button class="${cls}" data-jump="${s.n}" title="Sprint ${s.n}: ${esc(s.title)}" aria-label="Sprint ${s.n}, ${esc(s.title)}, ${st==="done"?"done":st==="doing"?"in progress":"not started"}"></button>`;
+  }).join("");
+  const ticks = document.getElementById("ticks");
+  let html = "";
+  PHASES.forEach(ph => { html += `<span style="grid-column:span ${ph.sprints.length}">P${ph.id} ${esc(ph.title)}</span>`; });
+  ticks.innerHTML = html;
+}
+
+// ---------- today ----------
+function renderNext(){
+  const el = document.getElementById("next");
+  const s = nextSprint();
+  if (!s) { el.innerHTML = `<h2>All 32 sprints done.</h2><p>Pulse is shipped. Pick a stretch goal from the Plan tab, or start writing the blog post about what you built.</p>`; return; }
+  const st = status(s);
+  const resDone = s.learn.filter((_,i)=>state.res[s.n+":"+i]).length;
+  const step = st==="todo" ? 0 : resDone < s.learn.length ? 0 : !state.notes[s.n+":plan"] ? 1 : doneCount(s) < s.done.length ? 2 : 3;
+  el.innerHTML = `
+    <div class="next-head">
+      <div>
+        <div class="sprint-no">Up next · Phase ${s.phase.id}: ${esc(s.phase.title)}</div>
+        <h2>Sprint ${s.n}: ${esc(s.title)}</h2>
+        <div class="meta">${esc(s.days)} of ${esc(s.phase.weeks)} · ${esc(s.hours)}${state.started[s.n]?` · started ${state.started[s.n]}`:""}</div>
+      </div>
+      ${st==="todo"?`<button class="btn primary" id="start-sprint">Start sprint</button>`:`<span class="pill warn">In progress</span>`}
+    </div>
+    <p class="goal">${md(s.goal)}</p>
+    <ol class="loop">
+      ${["Learn from the resources below","Send Claude what you learned and your plan","Build it, typing every line yourself","Tick every “Done when” box, then commit and push"].map((t,i)=>`<li class="${i<step?"past":i===step?"on":""}">${t}</li>`).join("")}
+    </ol>
+    <h3>Learn <span class="meta">(${resDone}/${s.learn.length} read)</span></h3>
+    <ul class="plain">${s.learn.map((t,i)=>`<li><label class="check res"><input type="checkbox" data-res="${s.n}:${i}" ${state.res[s.n+":"+i]?"checked":""}><span>${md(t)}</span></label></li>`).join("")}</ul>
+    <h3>Build</h3>
+    <ul class="dots">${s.build.map(t=>`<li>${md(t)}</li>`).join("")}</ul>
+    <h3>Done when <span class="meta">(${doneCount(s)}/${s.done.length})</span></h3>
+    <ul class="plain">${s.done.map((t,i)=>`<li><label class="check"><input type="checkbox" data-chk="${s.n}:${i}" ${state.checks[s.n+":"+i]?"checked":""}><span>${md(t)}</span></label></li>`).join("")}</ul>
+    <h3><label for="learned">What I learned</label></h3>
+    <textarea id="learned" data-note="${s.n}:learned" placeholder="3-5 sentences in your own words, including anything that confused you.">${esc(state.notes[s.n+":learned"]||"")}</textarea>
+    <h3><label for="plan">My plan</label></h3>
+    <textarea id="plan" data-note="${s.n}:plan" placeholder="The types and functions you'll write, and the order you'll build them in.">${esc(state.notes[s.n+":plan"]||"")}</textarea>
+    <h3><label for="qq">Questions</label></h3>
+    <textarea id="qq" data-note="${s.n}:questions" style="min-height:60px" placeholder="Anything you're unsure about before starting.">${esc(state.notes[s.n+":questions"]||"")}</textarea>
+    <div class="btns">
+      <button class="btn primary" id="copy-msg">Copy message for Claude</button>
+      <button class="btn" data-jump="${s.n}">See in full plan</button>
+    </div>`;
+}
+function renderSessions(){
+  const mins = state.sessions.reduce((a,b)=>a+b.mins,0);
+  const h = mins/60;
+  document.getElementById("hrs").textContent = h % 1 ? h.toFixed(1) : h;
+  document.getElementById("hrs-bar").style.width = Math.min(100, h/STUDY_HOURS*100) + "%";
+  // streak
+  const days = new Set(state.sessions.map(s=>s.date));
+  let streak = 0; const d = new Date(today());
+  if (!days.has(today())) d.setDate(d.getDate()-1);
+  while (days.has(d.toISOString().slice(0,10))) { streak++; d.setDate(d.getDate()-1); }
+  document.getElementById("streak").textContent = state.sessions.length ? `${streak}-day streak · ${days.size} study day${days.size===1?"":"s"} total` : "No sessions yet. Log your first one after you study today.";
+  const sorted = [...state.sessions].map((s,i)=>({...s,i})).sort((a,b)=>b.date.localeCompare(a.date));
+  document.getElementById("log").innerHTML = sorted.slice(0,40).map(s=>`<li><span><strong>${s.date}</strong> · ${s.mins} min${s.note?` · ${esc(s.note)}`:""}</span><span><button class="btn small" data-del="${s.i}" aria-label="Delete session on ${s.date}">Delete</button></span></li>`).join("");
+}
+
+// ---------- plan view ----------
+function renderPlan(){
+  const open = new Set([...document.querySelectorAll("details.sprint[open]")].map(d=>d.dataset.n));
+  const v = document.getElementById("view-plan");
+  v.innerHTML = PHASES.map(ph => `
+    <div class="phase" id="phase-${ph.id}">
+      <div class="phase-head">
+        <h2>Phase ${ph.id}: ${esc(ph.title)}</h2>
+        <span class="meta">${esc(ph.weeks)} · ${ph.sprints.length} sprints</span>
+        <span class="mini">${ph.sprints.map(s=>`<i class="${status(s)==="done"?"done":status(s)==="doing"?"doing":""}"></i>`).join("")}</span>
+      </div>
+      <div class="outcome"><strong>By the end:</strong> ${md(ph.outcome)}</div>
+      <p class="meta" style="margin:0 0 8px">${md(ph.why)}</p>
+      <ul class="concepts">${ph.concepts.map(c=>`<li>${md(c)}</li>`).join("")}</ul>
+      ${ph.sprints.map(s => { const st=status(s); return `
+        <details class="sprint ${st}" data-n="${s.n}" id="sprint-${s.n}" ${open.has(s.n)?"open":""}>
+          <summary><span class="dot"></span><span class="t">Sprint ${s.n}: ${esc(s.title)}<small>${esc(s.days)} · ${esc(s.hours)}${state.finished[s.n]?` · finished ${state.finished[s.n]}`:""}</small></span><span class="cnt">${doneCount(s)}/${s.done.length} done</span></summary>
+          <div class="body">
+            <p class="goal"><strong>Goal:</strong> ${md(s.goal)}</p>
+            <div class="cols">
+              <div><h3>Learn</h3><ul class="plain">${s.learn.map((t,i)=>`<li><label class="check res"><input type="checkbox" data-res="${s.n}:${i}" ${state.res[s.n+":"+i]?"checked":""}><span>${md(t)}</span></label></li>`).join("")}</ul></div>
+              <div><h3>Build</h3><ul class="dots">${s.build.map(t=>`<li>${md(t)}</li>`).join("")}</ul></div>
+            </div>
+            <h3>Done when</h3>
+            <ul class="plain">${s.done.map((t,i)=>`<li><label class="check"><input type="checkbox" data-chk="${s.n}:${i}" ${state.checks[s.n+":"+i]?"checked":""}><span>${md(t)}</span></label></li>`).join("")}</ul>
+          </div>
+        </details>`; }).join("")}
+      <div class="wrapup">
+        <div class="panel"><h3>Common pitfalls</h3><ul class="dots">${ph.pitfalls.map(t=>`<li>${md(t)}</li>`).join("")}</ul></div>
+        <div class="panel"><h3>Interview questions to answer</h3><ul class="dots">${ph.interview.map(t=>`<li>${md(t)}</li>`).join("")}</ul></div>
+      </div>
+    </div>`).join("");
+}
+
+// ---------- review view ----------
+let curWeek = 1;
+function renderReview(){
+  if (state.startDate) {
+    const day = Math.floor((new Date(today()) - new Date(state.startDate))/86400000) + 1;
+    if (!renderReview.init && day>0) { curWeek = Math.min(12, Math.ceil(day/7)); }
+  }
+  renderReview.init = true;
+  document.getElementById("weeks").innerHTML = Array.from({length:12},(_,i)=>i+1).map(w=>{
+    const has = state.reviews[w] && Object.values(state.reviews[w]).some(v=>v && v.trim());
+    return `<button class="${has?"has":""}" data-week="${w}" aria-pressed="${w===curWeek}" aria-label="Week ${w}">W${w}</button>`;
+  }).join("");
+  const r = state.reviews[curWeek] || {};
+  document.getElementById("qs").innerHTML = QUESTIONS.map((q,i)=>`<label for="q${i}">${q}</label><textarea id="q${i}" data-q="${i}" style="min-height:64px">${esc(r[i]||"")}</textarea>`).join("");
+}
+
+function renderAll(){
+  renderHero(); renderNext(); renderSessions(); renderPlan(); renderReview();
+  document.getElementById("start").value = state.startDate || "";
+}
+
+// ---------- events ----------
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.chk) { const n=t.dataset.chk.split(":")[0]; setCheck(t.dataset.chk, t.checked, SPRINTS.find(s=>s.n===n)); }
+  else if (t.dataset.res) { const n=t.dataset.res.split(":")[0]; setRes(t.dataset.res, t.checked, SPRINTS.find(s=>s.n===n)); }
+  else if (t.id === "start") { state.startDate = t.value; save(); renderHero(); renderReview(); }
+});
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.note) { state.notes[t.dataset.note] = t.value; const n=t.dataset.note.split(":")[0]; if(!state.started[n]&&t.value){state.started[n]=today();} save(); }
+  else if (t.dataset.q !== undefined) { (state.reviews[curWeek] ||= {})[t.dataset.q] = t.value; save(); }
+});
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.view) showView(t.dataset.view);
+  else if (t.dataset.jump) jump(t.dataset.jump);
+  else if (t.dataset.week) { curWeek = +t.dataset.week; renderReview(); }
+  else if (t.dataset.del !== undefined) { state.sessions.splice(+t.dataset.del,1); save(); renderSessions(); }
+  else if (t.id === "start-sprint") { const s=nextSprint(); state.started[s.n]=today(); if(!state.startDate){state.startDate=today();} save(); renderAll(); toast(`Sprint ${s.n} started`); }
+  else if (t.id === "copy-msg") {
+    const s = nextSprint(); const g = k => (state.notes[s.n+":"+k]||"").trim() || "(not filled in yet)";
+    copy(`Sprint: ${s.n} ${s.title}\n\nWhat I learned:\n${g("learned")}\n\nMy plan:\n${g("plan")}\n\nQuestions:\n${g("questions")}`, "Copied. Paste it into your chat with Claude.");
+  }
+  else if (t.id === "s-add") {
+    const date = document.getElementById("s-date").value || today();
+    const mins = Math.max(0, parseInt(document.getElementById("s-mins").value,10)||0);
+    if (!mins) { toast("Enter how many minutes you studied"); return; }
+    state.sessions.push({date, mins, note: document.getElementById("s-note").value.trim()});
+    document.getElementById("s-note").value = "";
+    save(); renderSessions(); toast("Session logged");
+  }
+  else if (t.id === "r-copy") {
+    const r = state.reviews[curWeek] || {};
+    copy(`Weekly review, week ${curWeek}\n\n` + QUESTIONS.map((q,i)=>`${q}\n${(r[i]||"").trim()||"-"}`).join("\n\n") + `\n\nLatest commit: `, "Review copied. Add your commit link and send it.");
+  }
+  else if (t.id === "export") copy(JSON.stringify(state), "Backup copied. Save it somewhere safe.");
+  else if (t.id === "import") {
+    const raw = prompt("Paste your progress backup:");
+    if (!raw) return;
+    try { const d = JSON.parse(raw); if (typeof d !== "object" || !d.checks) throw 0; state = Object.assign(blank(), d); save(); renderAll(); toast("Progress restored"); }
+    catch(_) { toast("That backup isn't valid. Copy it again and retry."); }
+  }
+  else if (t.id === "reset") { if (confirm("Reset all progress, notes, sessions and reviews? This can't be undone.")) { state = blank(); save(); renderAll(); toast("Progress reset"); } }
+  else if (t.id === "theme") {
+    const root = document.documentElement;
+    const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    root.dataset.theme = dark ? "light" : "dark";
+    try { localStorage.setItem("pulse-theme", root.dataset.theme); } catch(e) {}
+  }
+});
+function showView(v){
+  document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected", b.dataset.view===v));
+  document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on", s.id==="view-"+v));
+}
+function jump(n){
+  showView("plan");
+  const d = document.getElementById("sprint-"+n);
+  if (d) { d.open = true; d.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth", block:"start"}); d.querySelector("summary").focus({preventScroll:true}); }
+}
+
+try { const th = localStorage.getItem("pulse-theme"); if (th) document.documentElement.dataset.theme = th; } catch(e) {}
+document.getElementById("s-date").value = today();
+renderAll();
+connect();
+</script>
+</body>
+</html>
